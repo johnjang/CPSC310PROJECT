@@ -25,6 +25,9 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.AsyncCallback; 
 import com.google.gwt.core.client.GWT; 
+import com.google.gwt.maps.client.*;
+import com.google.gwt.maps.client.overlay.Marker;
+
 
 
 public class StockWatcher implements EntryPoint {
