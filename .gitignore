@@ -1,7 +1,7 @@
 *.class
 
 # Package Files #
-*.jar
+# *.jar #
 *.war
 
 # gwt caches and compiled units #
@@ -19,3 +19,6 @@ war/WEB-INF/classes/
 
 # App engine generated #
 war/WEB-INF/appengine-generated/
+
+# metadata #
+.metadata/
