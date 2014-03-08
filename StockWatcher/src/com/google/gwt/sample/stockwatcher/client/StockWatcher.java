@@ -37,8 +37,11 @@ public class StockWatcher implements EntryPoint {
 private VerticalPanel mainPanel = new VerticalPanel(); 
 private FlexTable stocksFlexTable = new FlexTable(); 
 private HorizontalPanel addPanel = new HorizontalPanel();  
+private HorizontalPanel adminPanel = new HorizontalPanel();
 private TextBox newSymbolTextBox = new TextBox();
+private TextBox urlTextBox = new TextBox();
 private Button addStockButton = new Button("Add");  
+private Button populateButton = new Button("Populate");
 private Label lastUpdatedLabel = new Label();
 private ArrayList<String> stocks = new ArrayList<String>();
 //private StockPriceServiceAsync stockPriceSvc = GWT.create(StockPriceService.class);
@@ -49,6 +52,7 @@ private Label loginLabel = new Label("Please sign in to your Google Account to a
 private Anchor signInLink = new Anchor("Sign In");
 private Anchor signOutLink = new Anchor("Sign Out");
 private final StockServiceAsync stockService = GWT.create(StockService.class);
+private final ParkingDataServiceAsync parkingDataService = GWT.create(ParkingDataService.class);
 /**  * Entry point method.  */  public void onModuleLoad() {
     // Check login status using login service.
     LoginServiceAsync loginService = GWT.create(LoginService.class);
@@ -102,10 +106,14 @@ private void loadStockWatcher() {
     addPanel.add(newSymbolTextBox);
     addPanel.add(addStockButton);
     addPanel.addStyleName("addPanel");
+    // Assemble Admin panel.
+    adminPanel.add(urlTextBox);
+    adminPanel.add(populateButton);
     // Assemble Main panel.
     mainPanel.add(signOutLink);
     mainPanel.add(stocksFlexTable);
     mainPanel.add(addPanel);
+    mainPanel.add(adminPanel);
     mainPanel.add(lastUpdatedLabel);
     
  // Associate the Main panel with the HTML host page.
@@ -128,6 +136,12 @@ private void loadStockWatcher() {
       }
     });
     
+    populateButton.addClickHandler(new ClickHandler() {
+        public void onClick(ClickEvent event) {
+            populateDatastore();
+        }
+      });
+    
     // Listen for keyboard events in the input box.
     newSymbolTextBox.addKeyDownHandler(new KeyDownHandler() {
       public void onKeyDown(KeyDownEvent event) {
@@ -136,6 +150,14 @@ private void loadStockWatcher() {
         }
       }
     });
+    
+    urlTextBox.addKeyDownHandler(new KeyDownHandler() {
+        public void onKeyDown(KeyDownEvent event) {
+          if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
+              populateDatastore();
+          }
+        }
+      });
 }
 
 
@@ -143,6 +165,27 @@ private void loadStockWatcher() {
  * Add stock to FlexTable. Executed when the user clicks the addStockButton or
  * presses enter in the newSymbolTextBox.
  */
+private void populateDatastore() {
+    final String url = urlTextBox.getText();
+    urlTextBox.setFocus(true);
+
+    // TODO: Add URL syntax check
+    
+    urlTextBox.setText("");
+
+    populateDatastore(url);
+}
+
+private void populateDatastore(final String url) {
+    parkingDataService.populateDatabaseFromURL(url, new AsyncCallback<Void>() {
+      public void onFailure(Throwable error) {
+    	  handleError(error);
+      }
+      public void onSuccess(Void ignore) {        
+      }
+    });
+}
+
 private void addStock() {
     final String symbol = newSymbolTextBox.getText().toUpperCase().trim();
     newSymbolTextBox.setFocus(true);
@@ -160,17 +203,19 @@ private void addStock() {
     if (stocks.contains(symbol))
       return;
     addStock(symbol);
-  }
+}
+
 private void addStock(final String symbol) {
     stockService.addStock(symbol, new AsyncCallback<Void>() {
       public void onFailure(Throwable error) {
-    	  handleError(error);
+          handleError(error);
       }
       public void onSuccess(Void ignore) {
         displayStock(symbol);
       }
     });
-  }
+}
+
   private void displayStock(final String symbol) {
     // Add the stock to the table.
     int row = stocksFlexTable.getRowCount();
